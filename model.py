@@ -5,13 +5,15 @@ from typing import NewType, Optional
 Quantity = NewType("Quantity", int)
 Sku = NewType("Sku", str)
 Reference = NewType("Reference", str)
+OrderReference = NewType("OrderReference", str)
+ProductReference = NewType("ProductReference", str)
 
 
 @dataclass(frozen=True)
 class OrderLine:
-    orderid: str
-    sku: str
-    qty: int
+    orderid: OrderReference
+    sku: ProductReference
+    qty: Quantity
 
 
 class Batch:
