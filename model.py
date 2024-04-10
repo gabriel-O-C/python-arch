@@ -9,7 +9,7 @@ OrderReference = NewType("OrderReference", str)
 ProductReference = NewType("ProductReference", str)
 
 
-@dataclass(frozen=True)
+@dataclass(unsafe_hash=True)
 class OrderLine:
     orderid: OrderReference
     sku: ProductReference
@@ -23,7 +23,7 @@ class Batch:
         self.reference = ref
         self.sku = sku
         self.eta = eta
-        self._purchased_quatity = qty
+        self._purchased_quantity = qty
         self._allocations = set()
 
     def __eq__(self, other) -> bool:
@@ -47,7 +47,7 @@ class Batch:
             self._allocations.add(line)
 
     def can_allocate(self, line: OrderLine) -> bool:
-        return self.sku == line.sku and self.available_quantity >= line.qty
+        return self.sku == line.sku and self.available_quantity >= int(line.qty)
 
     def deallocate(self, line: OrderLine):
         if line in self._allocations:
@@ -59,7 +59,7 @@ class Batch:
 
     @property
     def available_quantity(self) -> int:
-        return self._purchased_quatity - self.allocated_quantity
+        return self._purchased_quantity - self.allocated_quantity
 
 
 def allocate(line: OrderLine, batches: List[Batch]) -> str:
