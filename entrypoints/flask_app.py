@@ -2,11 +2,11 @@ from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import adapters.orm as orm
 import config
-import orm
-from model import OrderLine, OutOfStock
-from repository import SqlAlchemyRepository
-from services import InvalidSku, allocate
+from adapters.repository import SqlAlchemyRepository
+from domain.model import OrderLine, OutOfStock
+from service_layer.services import InvalidSku, allocate
 
 orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
