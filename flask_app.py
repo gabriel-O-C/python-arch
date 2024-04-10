@@ -3,9 +3,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import config
-import model
 import orm
-import repository
+from model import OrderLine, OutOfStock
+from repository import SqlAlchemyRepository
+from services import InvalidSku, allocate
 
 orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
@@ -19,19 +20,14 @@ def is_valid_sku(sku, batches):
 @app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
     session = get_session()
-    batches = repository.SqlAlchemyRepository(session).list()
+    repo = SqlAlchemyRepository(session)
 
-    line = model.OrderLine(
+    line = OrderLine(
         str(request.json["orderid"]), str(request.json["sku"]), str(request.json["qty"])
-
     )
-
-    if not is_valid_sku(line.sku, batches):
-        return jsonify({"message": f"Invalid sku {line.sku}"}), 400
-
     try:
-        batchref = model.allocate(line, batches)
-    except model.OutOfStock as e:
+        batchref = allocate(line, repo, session)
+    except (OutOfStock, InvalidSku) as e:
         return jsonify({"message": str(e)}), 400
 
     session.commit()
