@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 import adapters.orm as orm
 import config
 from adapters.repository import SqlAlchemyRepository
-from domain.model import OrderLine, OutOfStock
+from domain.model import OutOfStock
 from service_layer.services import InvalidSku, allocate
 
 orm.start_mappers()
@@ -22,11 +22,12 @@ def allocate_endpoint():
     session = get_session()
     repo = SqlAlchemyRepository(session)
 
-    line = OrderLine(
-        str(request.json["orderid"]), str(request.json["sku"]), str(request.json["qty"])
-    )
+    orderid = str(request.json["orderid"])
+    sku = str(request.json["sku"])
+    qty = int(request.json["qty"])
+
     try:
-        batchref = allocate(line, repo, session)
+        batchref = allocate(orderid, sku, qty, repo, session)
     except (OutOfStock, InvalidSku) as e:
         return jsonify({"message": str(e)}), 400
 
