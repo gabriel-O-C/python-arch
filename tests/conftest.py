@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import requests
 from requests.exceptions import ConnectionError
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import clear_mappers, sessionmaker
 
@@ -61,49 +61,6 @@ def postgres_session(postgres_db):
     start_mappers()
     yield sessionmaker(bind=postgres_db)()
     clear_mappers()
-
-
-@pytest.fixture
-def add_stock(postgres_session):
-    batches_added = set()
-    skus_added = set()
-
-    def _add_stock(lines):
-        for ref, sku, qty, eta in lines:
-            postgres_session.execute(
-                text(
-                    "insert into batches (reference, sku, _purchased_quantity, eta)"
-                    " values (:ref, :sku, :qty, :eta)"
-                ),
-                dict(ref=ref, sku=sku, qty=qty, eta=eta),
-            )
-            [[batch_id]] = postgres_session.execute(
-                text("select id from batches where reference=:ref and sku=:sku"),
-                dict(ref=ref, sku=sku),
-            )
-            batches_added.add(batch_id)
-            skus_added.add(sku)
-        postgres_session.commit()
-
-    yield _add_stock
-
-    for batch_id in batches_added:
-        postgres_session.execute(
-            text(
-                "delete from allocations where batch_id=:batch_id",
-            ),
-            dict(batch_id=batch_id),
-        )
-        postgres_session.execute(
-            text("delete from batches where id=:batch_id"),
-            dict(batch_id=batch_id),
-        )
-    for sku in skus_added:
-        postgres_session.execute(
-            text("delete from order_lines where sku=:sku"),
-            dict(sku=sku),
-        )
-        postgres_session.commit()
 
 
 @pytest.fixture
