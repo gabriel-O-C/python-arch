@@ -1,53 +1,44 @@
 import pytest
 
-import adapters.repository as repository
 import domain.model as model
 import service_layer.services as services
 
 
-class FakeSession():
-  commited = False
+class FakeSession:
+    commited = False
 
-  def commit(self):
-    self.commited = True
+    def commit(self):
+        self.commited = True
 
 
+class FakeRepository(set):
+    @staticmethod
+    def for_batch(ref, sku, qty, eta=None):
+        return FakeRepository([model.Batch(ref, sku, qty, eta)])
+
+    def list(self):
+        return list(self)
 
 def test_commits():
-  line = model.OrderLine('o1', 'COMPLICATED-LAMP', 10)
+    repo =  FakeRepository.for_batch("b1", "COMPLICATED-LAMP", 100, None)
 
-  batch = model.Batch('b1', 'COMPLICATED-LAMP', 100, None)
+    session = FakeSession()
 
-  repo =  repository.FakeRepository([batch])
+    services.allocate("o1", "COMPLICATED-LAMP", 10, repo, session)
 
-  session = FakeSession()
+    assert session.commited is True
 
-
-  services.allocate(line, repo, session)
-
-  assert session.commited is True
 
 def test_returns_allocations():
+    repo =  FakeRepository.for_batch('batch1', 'COMPLICATED-LAMP', 10, eta=None)
 
-  line = model.OrderLine('o1', 'COMPLICATED-LAMP', 10)
+    result = services.allocate("o1", "COMPLICATED-LAMP", 10, repo, FakeSession())
 
-  batch = model.Batch('b1', 'COMPLICATED-LAMP', 100, None)
-
-  repo =  repository.FakeRepository([batch])
-
-  result = services.allocate(line, repo, FakeSession())
-
-
-  assert result == 'b1'
-
+    assert result == "batch1"
 
 
 def test_error_for_invalid_sku():
-  line = model.OrderLine('o1', 'NONEXISTENT-LAMP', 10)
+    repo = FakeRepository.for_batch("b1", "COMPLICATED-LAMP", 100, None)
 
-  batch = model.Batch('b1', 'COMPLICATED-LAMP', 100, None)
-
-  repo =  repository.FakeRepository([batch])
-
-  with pytest.raises(services.InvalidSku, match="Invalid sku NONEXISTENT-LAMP"):
-    services.allocate(line, repo, FakeSession())
+    with pytest.raises(services.InvalidSku, match="Invalid sku NONEXISTENT-LAMP"):
+        services.allocate("o1", "NONEXISTENT-LAMP", 10, repo, FakeSession())
