@@ -2,29 +2,34 @@ from datetime import date
 from typing import Optional
 
 import domain.model as model
-from adapters.repository import AbstractRepository
+
+from .unit_of_work import AbstractUnitOfWork
 
 
 class InvalidSku(Exception):
-  pass
+    pass
 
 
 def is_valid_sku(sku, batches):
-  return sku in {b.sku for b in batches}
+    return sku in {b.sku for b in batches}
 
 
-def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], repo: AbstractRepository, session):
-  repo.add(model.Batch(ref, sku, qty, eta))
-  session.commit()
+def add_batch(
+    ref: str, sku: str, qty: int, eta: Optional[date], uow: AbstractUnitOfWork
+):
+    with uow:
+        uow.batches.add(model.Batch(ref, sku, qty, eta))
+        uow.commit()
 
-def allocate(orderid: str, sku: str, qty: int, repo: AbstractRepository, session) -> str:
-  batches = repo.list()
 
-  line = model.OrderLine(orderid, sku, qty)
-  if not is_valid_sku(sku, batches):
-    raise InvalidSku(f'Invalid sku {sku}')
-  
+def allocate(orderid: str, sku: str, qty: int, uow: AbstractUnitOfWork) -> str:
+    line = model.OrderLine(orderid, sku, qty)
+    with uow:
+        batches = uow.batches.list()
 
-  batchref = model.allocate(line, batches)
-  session.commit()
-  return batchref
+        if not is_valid_sku(sku, batches):
+            raise InvalidSku(f"Invalid sku {sku}")
+
+        batchref = model.allocate(line, batches)
+        uow.commit()
+        return batchref
