@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 from flask import Flask, jsonify, request
@@ -32,17 +31,19 @@ def allocate_endpoint():
     except (OutOfStock, InvalidSku) as e:
         return jsonify({"message": str(e)}), 400
 
-
     return jsonify({"batchref": batchref}), 201
+
 
 @app.route("/add_batch", methods=["POST"])
 def add_batch():
     eta = request.json["eta"]
-
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
-
-    service_add_batch(request.json['ref'], request.json['sku'], request.json['qty'], eta, SqlAlchemyUnitOfWork())
-
-
-    return 'OK', 201
+    service_add_batch(
+        request.json["ref"],
+        request.json["sku"],
+        request.json["qty"],
+        eta,
+        SqlAlchemyUnitOfWork(),
+    )
+    return "OK", 201

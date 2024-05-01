@@ -15,15 +15,15 @@ def is_valid_sku(sku, batches):
 
 
 def add_batch(
-    ref: str, sku: str, qty: int, eta: Optional[date], uow: AbstractUnitOfWork
+        ref: str, sku: str, qty: int, eta: Optional[date],
+        uow: AbstractUnitOfWork
 ):
     with uow:
         product = uow.products.get(sku=sku)
-
         if product is None:
             product = model.Product(sku, batches=[])
             uow.products.add(product)
-        uow.products.append(model.Batch(ref, sku, qty, eta))
+        product.batches.append(model.Batch(ref, sku, qty, eta))
         uow.commit()
 
 

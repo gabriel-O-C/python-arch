@@ -4,7 +4,7 @@ import pytest
 
 import service_layer.services as services
 from adapters import repository
-from domain.model import Batch
+from domain.model import Product
 from service_layer.unit_of_work import AbstractUnitOfWork
 
 
@@ -15,23 +15,23 @@ class FakeSession:
         self.commited = True
 
 
-class FakeRepository(repository.AbstractRepository):
-    def __init__(self, batches: List[Batch]) -> None:
-        self._batches = set(batches)
+class FakeRepository(repository.AbstractProductRepository):
+    def __init__(self, products: List[Product]) -> None:
+        self._products = set(products)
 
-    def add(self, batch: Batch):
-        self._batches.add(batch)
+    def add(self, product):
+        self._products.add(product)
 
-    def get(self, reference) -> Batch:
-        return next(b for b in self._batches if b.reference == reference)
+    def get(self, sku) -> Product:
+        return next((p for p in self._products if p.sku == sku), None)
 
-    def list(self) -> List[Batch]:
-        return list(self._batches)
+    def list(self) -> List[Product]:
+        return list(self._products)
 
 
 class FakeUnitOfWork(AbstractUnitOfWork):
     def __init__(self):
-        self.batches = FakeRepository([])
+        self.products = FakeRepository([])
         self.committed = False
 
     def commit(self):
@@ -46,7 +46,7 @@ def test_add_batch():
 
     services.add_batch("b1", "CRUNCY-ARMCHAIR", 100, None, uow)
 
-    assert uow.batches.get("b1") is not None
+    assert uow.products.get("CRUNCY-ARMCHAIR") is not None
     assert uow.committed
 
 

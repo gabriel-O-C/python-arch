@@ -31,16 +31,18 @@ class AbstractUnitOfWork(abc.ABC):
 DEFAULT_SESSION_FACTORY = sessionmaker(
     bind=create_engine(
         config.get_postgres_uri(),
+        isolation_level="REPEATABLE READ",
+
     )
 )
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
-        self.session_factory: Session = session_factory
+        self.session_factory = session_factory
 
     def __enter__(self):
-        self.session = self.session_factory()  # type: Session
+        self.session: Session = self.session_factory()  # type: Session
         self.products = repository.SqlAlchemyRepository(self.session)
         return super().__enter__()
 
