@@ -2,10 +2,10 @@ from typing import List
 
 import pytest
 
-import service_layer.services as services
-from adapters import repository
-from domain.model import Product
-from service_layer.unit_of_work import AbstractUnitOfWork
+from src.allocation.adapters import repository
+from src.allocation.domain import model
+from src.allocation.service_layer import services
+from src.allocation.service_layer.unit_of_work import AbstractUnitOfWork
 
 
 class FakeSession:
@@ -16,16 +16,16 @@ class FakeSession:
 
 
 class FakeRepository(repository.AbstractProductRepository):
-    def __init__(self, products: List[Product]) -> None:
+    def __init__(self, products: List[model.Product]) -> None:
         self._products = set(products)
 
     def add(self, product):
         self._products.add(product)
 
-    def get(self, sku) -> Product:
+    def get(self, sku) -> model.Product:
         return next((p for p in self._products if p.sku == sku), None)
 
-    def list(self) -> List[Product]:
+    def list(self) -> List[model.Product]:
         return list(self._products)
 
 

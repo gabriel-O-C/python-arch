@@ -1,15 +1,16 @@
 from datetime import datetime
 
 from flask import Flask, jsonify, request
+
+# from service_layer.services import add_batch as service_add_batch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import adapters.orm as orm
-import config
-from domain.model import OutOfStock
-from service_layer.services import InvalidSku, allocate
-from service_layer.services import add_batch as service_add_batch
-from service_layer.unit_of_work import SqlAlchemyUnitOfWork
+from src.allocation import config
+from src.allocation.adapters import orm
+from src.allocation.domain.model import OutOfStock
+from src.allocation.service_layer.services import InvalidSku, add_batch, allocate
+from src.allocation.service_layer.unit_of_work import SqlAlchemyUnitOfWork
 
 orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
@@ -35,11 +36,11 @@ def allocate_endpoint():
 
 
 @app.route("/add_batch", methods=["POST"])
-def add_batch():
+def handle_add_batch():
     eta = request.json["eta"]
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
-    service_add_batch(
+    add_batch(
         request.json["ref"],
         request.json["sku"],
         request.json["qty"],

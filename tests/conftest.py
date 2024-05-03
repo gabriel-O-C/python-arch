@@ -9,8 +9,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import clear_mappers, sessionmaker
 
-import config
-from adapters.orm import metadata, start_mappers
+from src.allocation.adapters.orm import metadata, start_mappers
+from src.allocation.config import get_api_url, get_postgres_uri
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def wait_for_postgres_to_come_up(engine):
 
 def wait_for_webapp_to_come_up():
     deadline = time.time() + 10
-    url = config.get_api_url()
+    url = get_api_url()
     while time.time() < deadline:
         try:
             return requests.get(url)
@@ -55,7 +55,7 @@ def wait_for_webapp_to_come_up():
 
 @pytest.fixture(scope="session")
 def postgres_db():
-    engine = create_engine(config.get_postgres_uri())
+    engine = create_engine(get_postgres_uri())
     wait_for_postgres_to_come_up(engine)
     metadata.create_all(engine)
     return engine
@@ -70,6 +70,6 @@ def postgres_session(postgres_db):
 
 @pytest.fixture
 def restart_api():
-    (Path(__file__).parent / "flask_app.py").touch()
+    (Path(__file__).parent / "../src/allocation/entrypoints/flask_app.py").touch()
     time.sleep(0.5)
     wait_for_webapp_to_come_up()

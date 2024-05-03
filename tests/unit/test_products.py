@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from domain.model import Batch, OrderLine, Product
+from src.allocation.domain.model import Batch, OrderLine, Product
 
 today = datetime.today()
 tomorrow = today + timedelta(days=1)

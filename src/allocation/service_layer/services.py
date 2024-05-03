@@ -1,8 +1,7 @@
 from datetime import date
 from typing import Optional
 
-import domain.model as model
-
+from ..domain import model
 from .unit_of_work import AbstractUnitOfWork
 
 

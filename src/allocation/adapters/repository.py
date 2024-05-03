@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from domain.model import Product
+from ..domain.model import Product
 
 
 class AbstractProductRepository(ABC):

@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy.sql import text
 
-from domain import model
-from service_layer import unit_of_work
+from src.allocation.domain import model
+from src.allocation.service_layer import unit_of_work
 
 
 def insert_batch(session, ref, sku, qty, eta, product_version=1):
